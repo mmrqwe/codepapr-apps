@@ -1,0 +1,16 @@
+{
+  "spec": "papr/0.1",
+  "name": "天气小组件",
+  "version": "0.1.1",
+  "entry": "index.html",
+  "kind": "plugin",
+  "local": "none",
+  "network": true,
+  "surface": {
+    "type": "overlay",
+    "width": 360,
+    "height": 560,
+    "position": "top-right"
+  },
+  "description": "悬浮天气插件，支持搜索任意城市、收藏常用地区，实时显示温度/体感/风力/湿度与5日预报（支持高度拖动与本地持久化）"
+}

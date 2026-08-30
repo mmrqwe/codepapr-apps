@@ -1,0 +1,32 @@
+{
+  "version": "1.0",
+  "name": "CodePapr App & Plugin Market",
+  "description": "Official App & Plugin Registry for CodePapr",
+  "repository": "https://github.com/mmrqwe/codepapr-apps",
+  "updatedAt": "2026-08-30T13:00:00Z",
+  "apps": [
+    {
+      "id": "weather-hud",
+      "name": "Weather HUD",
+      "title": "天气小组件",
+      "version": "0.1.1",
+      "description": "悬浮天气插件，支持搜索任意城市、收藏常用地区，实时显示温度/体感/风力/湿度与5日预报（支持高度拖动与本地持久化）",
+      "kind": "plugin",
+      "author": "CodePapr",
+      "icon": "⛅",
+      "tags": ["tools", "productivity", "weather"],
+      "directory": "apps/weather-hud",
+      "entry": "index.html",
+      "surface": {
+        "type": "overlay",
+        "width": 360,
+        "height": 560,
+        "position": "top-right"
+      },
+      "permissions": {
+        "network": true,
+        "local": "none"
+      }
+    }
+  ]
+}
