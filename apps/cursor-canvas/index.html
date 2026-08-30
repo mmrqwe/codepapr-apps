@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>看板</title>
 <script>
-// 主题同步：尽早执行，避免白闪；同步宿主 data-mode / prefers-color-scheme / postMessage
+// 主题同步：尽早执行，避免白闪；同步宿主 data-mode / prefers-color-scheme / postMessage / papr-theme-change
 (function(){
   function apply(mode){
     if(mode!=='dark' && mode!=='light') mode = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -58,19 +58,21 @@
     if(mode==='dark'||mode==='light') apply(mode);
     if(typeof d==='string' && (d==='dark'||d==='light')) apply(d);
   });
+  window.addEventListener('papr-theme-change', function(e){
+    var m = e && e.detail && e.detail.mode;
+    if(m==='dark'||m==='light') apply(m);
+  });
   var last = document.documentElement.getAttribute('data-mode');
   setInterval(function(){
     var cur = detect();
     if(cur!==last){ last=cur; apply(cur); }
   }, 1000);
-  // 暴露给 main.js 复用
   window.__applyTheme = apply;
   window.__detectTheme = detect;
 })();
 </script>
 <link rel="stylesheet" href="css/theme.css" />
 <style>
-  /* 兜底：即使 theme.css 加载失败也能看见，且跟随主题 */
   :root{ --bg:#f7f4ef; --panel:#fdfcfa; --line:#e8ddd0; --fg:#1e1b18; --muted:#7a7570; --accent:#1e1b18; --accent-fg:#fdfcfa; }
   @media (prefers-color-scheme: dark){
     :root{ --bg:#0a0a0c; --panel:#17171a; --line:#232326; --fg:#f4f4f5; --muted:#9a9aa3; --accent:#ffffff; --accent-fg:#0a0a0c; }
@@ -101,26 +103,10 @@
     if(el){ el.textContent='⚠ '+msg; el.className='show'; }
   });
 </script>
-<script src="js/vendor/react.min.js" onerror="window.__bootErrors.push('react.min.js 加载失败');document.getElementById('err').textContent='react.min.js 加载失败';document.getElementById('err').className='show'"></script>
-<script src="js/vendor/react-dom.min.js" onerror="window.__bootErrors.push('react-dom.min.js 加载失败')"></script>
-<script src="js/vendor/htm.umd.js" onerror="window.__bootErrors.push('htm.umd.js 加载失败')"></script>
 </head>
 <body>
-<div id="root"><div id="boot"><h2>▦ 看板 加载中…</h2><p>若一直停留在此，说明脚本未执行。请按 <code>⌘+Shift+P</code> 打开控制台查看错误，或点右上角“查看历史”。</p><p style="margin-top:10px;color:var(--muted);font-size:12px">数据已在 sqlite（<code>board:history</code> / <code>inbox:board</code>），刷新后应自动恢复并跟随系统深浅。</p></div></div>
+<div id="root"><div id="boot"><h2>▦ 看板 加载中…</h2><p>正在连接本地 SQLite 存储…</p></div></div>
 <div id="err"></div>
-<script type="module" src="js/main.js"></script>
-<script>
-  setTimeout(function(){
-    var boot=document.getElementById('boot');
-    var err=document.getElementById('err');
-    if(boot && boot.parentNode && document.getElementById('root').contains(boot)){
-      if(!window.__reactMounted){
-        err.textContent='⚠ React 未挂载（'+(window.__bootErrors.join('; ')||'未知原因')+'）\n已尝试 plain 渲染，若仍空白请截图此条。';
-        err.className='show';
-        if(window.__plainRender) try{ window.__plainRender(); }catch(e){ err.textContent+='\nplain 失败: '+e.message; }
-      }
-    }
-  }, 3000);
-</script>
+<script src="js/main.js"></script>
 </body>
 </html>
