@@ -1,0 +1,42 @@
+{
+  "spec": "papr/0.1",
+  "name": "看板",
+  "description": "极简看板：主界面展示当前看板，历史抽屉支持删除/清空/下载HTML，数据存 sqlite",
+  "kind": "plugin",
+  "local": "none",
+  "network": false,
+  "surface": {
+    "type": "overlay",
+    "width": 560,
+    "height": 520,
+    "position": "top-right"
+  },
+  "inbox": {
+    "board": {
+      "description": "推送看板。op=replace覆盖|append追加|patch更新(支持按block id或索引更新)|clear清空。blocks为组件数组，支持 stats/table/chart/diagram/diff/todo/text/callout/columns/box",
+      "example": {
+        "op": "replace",
+        "title": "PR 总结看板",
+        "subtitle": "feat/auth · +342 -30",
+        "blocks": [
+          { "type": "stats", "items": [{ "label": "新增", "value": "+342" }, { "label": "覆盖率", "value": "87%" }] },
+          { "type": "table", "title": "变更文件", "columns": ["文件", "改动", "状态"], "rows": [["auth.ts", "+120", "✓"], ["db.ts", "-30", "⚠"]] },
+          { "type": "chart", "chartType": "bar", "title": "性能对比", "caption": "零基线", "data": [{ "name": "优化前", "value": 3.8 }, { "name": "优化后", "value": 1.9 }] }
+        ]
+      }
+    },
+    "canvas": {
+      "description": "兼容旧频道，同 board。旧 graph/doc/cards/timeline/mindmap 自动转为 blocks",
+      "example": {
+        "op": "replace",
+        "title": "用户认证架构",
+        "layout": "graph",
+        "nodes": [
+          { "id": "client", "label": "客户端", "type": "client", "detail": "Web / App" },
+          { "id": "gateway", "label": "API 网关", "type": "service", "detail": "鉴权与限流" }
+        ],
+        "edges": [{ "from": "client", "to": "gateway", "label": "HTTPS" }]
+      }
+    }
+  }
+}

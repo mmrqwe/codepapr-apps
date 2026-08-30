@@ -20,6 +20,7 @@ codepapr-apps/
 
 | App / Plugin | Kind | Description | Author |
 | :--- | :--- | :--- | :--- |
+| **[▦ 看板 (cursor-canvas)](apps/cursor-canvas/)** | `plugin` | 极简可视化产物看板，支持指标卡片、数据表格、柱状/折线/面积/环形图表、拓扑架构图、代码 Diff、待办清单及历史回放与导出 | CodePapr |
 | **[⛅ 天气小组件 (weather-hud)](apps/weather-hud/)** | `plugin` | 悬浮天气插件，支持搜索任意城市、收藏常用地区，实时显示温度/体感/风力/湿度与5日预报 | CodePapr |
 
 ## 🛠️ Contribution & Publishing

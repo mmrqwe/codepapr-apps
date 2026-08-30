@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>看板</title>
+<script>
+// 主题同步：尽早执行，避免白闪；同步宿主 data-mode / prefers-color-scheme / postMessage
+(function(){
+  function apply(mode){
+    if(mode!=='dark' && mode!=='light') mode = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-mode', mode);
+    try{ document.documentElement.style.colorScheme = mode; }catch{}
+  }
+  function detect(){
+    try{
+      var p = window.parent;
+      if(p && p!==window){
+        var pd = p.document;
+        var m = pd.documentElement.getAttribute('data-mode') || pd.documentElement.getAttribute('data-theme') || pd.body?.getAttribute('data-mode');
+        if(m==='dark'||m==='light') return m;
+        if(pd.documentElement.classList.contains('dark') || pd.body?.classList.contains('dark')) return 'dark';
+        if(pd.documentElement.classList.contains('light')) return 'light';
+      }
+    }catch(e){}
+    var own = document.documentElement.getAttribute('data-mode');
+    if(own==='dark'||own==='light') return own;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  apply(detect());
+  try{
+    var mq = window.matchMedia('(prefers-color-scheme: dark)');
+    var onMq = function(e){ 
+      try{
+        var p = window.parent;
+        if(p && p!==window){
+          var m = p.document.documentElement.getAttribute('data-mode');
+          if(m==='dark'||m==='light') return;
+        }
+      }catch(e2){}
+      apply(e.matches?'dark':'light'); 
+    };
+    mq.addEventListener ? mq.addEventListener('change', onMq) : mq.addListener(onMq);
+  }catch(e){}
+  try{
+    var p = window.parent;
+    if(p && p!==window){
+      var target = p.document.documentElement;
+      var obs = new MutationObserver(function(){ apply(detect()); });
+      obs.observe(target, {attributes:true, attributeFilter:['data-mode','data-theme','class']});
+      if(p.document.body) obs.observe(p.document.body, {attributes:true, attributeFilter:['class','data-mode']});
+    }
+  }catch(e){}
+  window.addEventListener('message', function(e){
+    var d=e.data;
+    if(!d) return;
+    var mode = d.mode || d.theme || d['data-mode'] || (d.type==='theme' && d.value);
+    if(mode==='dark'||mode==='light') apply(mode);
+    if(typeof d==='string' && (d==='dark'||d==='light')) apply(d);
+  });
+  var last = document.documentElement.getAttribute('data-mode');
+  setInterval(function(){
+    var cur = detect();
+    if(cur!==last){ last=cur; apply(cur); }
+  }, 1000);
+  // 暴露给 main.js 复用
+  window.__applyTheme = apply;
+  window.__detectTheme = detect;
+})();
+</script>
+<link rel="stylesheet" href="css/theme.css" />
+<style>
+  /* 兜底：即使 theme.css 加载失败也能看见，且跟随主题 */
+  :root{ --bg:#f7f4ef; --panel:#fdfcfa; --line:#e8ddd0; --fg:#1e1b18; --muted:#7a7570; --accent:#1e1b18; --accent-fg:#fdfcfa; }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#0a0a0c; --panel:#17171a; --line:#232326; --fg:#f4f4f5; --muted:#9a9aa3; --accent:#ffffff; --accent-fg:#0a0a0c; }
+  }
+  html[data-mode="light"]{ --bg:#f7f4ef; --panel:#fdfcfa; --line:#e8ddd0; --fg:#1e1b18; --muted:#7a7570; --accent:#1e1b18; --accent-fg:#fdfcfa; }
+  html[data-mode="dark"]{ --bg:#0a0a0c; --panel:#17171a; --line:#232326; --fg:#f4f4f5; --muted:#9a9aa3; --accent:#ffffff; --accent-fg:#0a0a0c; }
+  html,body{margin:0;height:100%;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:var(--bg);color:var(--fg)}
+  #root{min-height:100vh}
+  #boot{max-width:560px;margin:40px auto;padding:20px;border:1px solid var(--line);border-radius:14px;background:var(--panel);color:var(--fg)}
+  #boot h2{margin:0 0 6px;font-size:15px;color:var(--fg)}
+  #boot p{margin:0;color:var(--muted);font-size:13px;line-height:1.6}
+  #boot code{font-size:11px;background:var(--panel);border:1px solid var(--line);padding:1px 5px;border-radius:6px;color:var(--fg)}
+  #err{position:fixed;left:12px;right:12px;bottom:12px;background:var(--accent);color:var(--accent-fg);padding:10px 12px;border-radius:10px;font-size:12px;line-height:1.5;display:none;z-index:99;white-space:pre-wrap;word-break:break-all;border:1px solid var(--line)}
+  #err.show{display:block}
+</style>
+<script>
+  window.__bootErrors=[];
+  window.addEventListener('error', function(e){
+    var msg = (e.message||'error') + (e.filename? ' @ '+e.filename+':'+e.lineno:'');
+    window.__bootErrors.push(msg);
+    var el=document.getElementById('err');
+    if(el){ el.textContent='⚠ '+msg+'\n'+window.__bootErrors.slice(-3).join('\n'); el.className='show'; }
+  });
+  window.addEventListener('unhandledrejection', function(e){
+    var msg = (e.reason && e.reason.message) ? e.reason.message : String(e.reason||'promise rejection');
+    window.__bootErrors.push(msg);
+    var el=document.getElementById('err');
+    if(el){ el.textContent='⚠ '+msg; el.className='show'; }
+  });
+</script>
+<script src="js/vendor/react.min.js" onerror="window.__bootErrors.push('react.min.js 加载失败');document.getElementById('err').textContent='react.min.js 加载失败';document.getElementById('err').className='show'"></script>
+<script src="js/vendor/react-dom.min.js" onerror="window.__bootErrors.push('react-dom.min.js 加载失败')"></script>
+<script src="js/vendor/htm.umd.js" onerror="window.__bootErrors.push('htm.umd.js 加载失败')"></script>
+</head>
+<body>
+<div id="root"><div id="boot"><h2>▦ 看板 加载中…</h2><p>若一直停留在此，说明脚本未执行。请按 <code>⌘+Shift+P</code> 打开控制台查看错误，或点右上角“查看历史”。</p><p style="margin-top:10px;color:var(--muted);font-size:12px">数据已在 sqlite（<code>board:history</code> / <code>inbox:board</code>），刷新后应自动恢复并跟随系统深浅。</p></div></div>
+<div id="err"></div>
+<script type="module" src="js/main.js"></script>
+<script>
+  setTimeout(function(){
+    var boot=document.getElementById('boot');
+    var err=document.getElementById('err');
+    if(boot && boot.parentNode && document.getElementById('root').contains(boot)){
+      if(!window.__reactMounted){
+        err.textContent='⚠ React 未挂载（'+(window.__bootErrors.join('; ')||'未知原因')+'）\n已尝试 plain 渲染，若仍空白请截图此条。';
+        err.className='show';
+        if(window.__plainRender) try{ window.__plainRender(); }catch(e){ err.textContent+='\nplain 失败: '+e.message; }
+      }
+    }
+  }, 3000);
+</script>
+</body>
+</html>
