@@ -2,6 +2,7 @@
    - 纯原生零依赖运行时，秒级响应，永不报 vendor 缺失
    - 推送协议：app_publish({ appId:"cursor-canvas", channel:"board", payload:{op,title,blocks} })
    - 数据存储：papr.db (SQLite): board:history / board:clearedAt / inbox:board
+     全局安装时数据落在当前项目 .CodePapr/plugin-data/cursor-canvas/，按项目隔离
    - 历史抽屉：支持 查看 / 删除 / 清空 / 导出下载独立HTML / 恢复最近一条
 */
 
@@ -858,6 +859,7 @@
       this.toastTimer = null;
       this.recovering = false;
       this.selectedNodeId = null;
+      this.projectName = '';
 
       this.initEvents();
       this.initStorage();
@@ -900,6 +902,11 @@
           this.render();
           return;
         }
+
+        try {
+          const info = await window.papr.app.info();
+          this.projectName = (info && info.workspaceName) || '';
+        } catch {}
 
         let h = null, clearedAt = null, inboxBoard = null, inboxCanvas = null;
         try { h = await window.papr.db.get('board:history'); } catch {}
@@ -1246,7 +1253,7 @@
             <div class="mark">▦</div>
             <div class="brand-text">
               <div class="title">${esc(board?.title || '看板')}</div>
-              <div class="sub">${esc(board?.subtitle || '等待 Agent 推送 · 支持 表格/图表/示意图/Diff/待办')}</div>
+              <div class="sub">${esc(this.projectName ? `项目 · ${this.projectName}` : (board?.subtitle || '等待 Agent 推送 · 支持 表格/图表/示意图/Diff/待办'))}</div>
             </div>
             <span class="badge">${board ? `${board.blocks.length} 块` : '空'}</span>
           </div>
@@ -1263,7 +1270,7 @@
             <div class="empty">
               <div class="mark">▦</div>
               <h2>暂无看板</h2>
-              <p>等待 Agent 推送。推送后在此展示，历史可在右上角查看。</p>
+              <p>当前项目还没有看板。Agent 推送后只保存在本项目，不会出现在其它项目里。</p>
               <div style="display:flex;gap:8px;justify-content:center;margin-top:14px;flex-wrap:wrap">
                 <button class="btn primary" data-action="recover" ${this.recovering ? 'disabled' : ''}>${this.recovering ? '恢复中…' : '恢复最近一条'}</button>
                 <button class="btn" data-action="open-hist">查看历史${history.length ? ` · ${history.length}` : ''}</button>
@@ -1296,7 +1303,7 @@
 
       const footerHtml = `
         <footer class="statusbar">
-          <span>本地 · 离线可用 · 数据存 sqlite</span>
+          <span>本地 · ${this.projectName ? `项目 ${this.projectName} · ` : ''}数据按项目隔离</span>
           <span class="mono">${board ? `${board.blocks.length} 块` : '0 块'} · ${history.length} 历史</span>
         </footer>
       `;

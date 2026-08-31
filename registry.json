@@ -3,14 +3,14 @@
   "name": "CodePapr App & Plugin Market",
   "description": "Official App & Plugin Registry for CodePapr",
   "repository": "https://github.com/mmrqwe/codepapr-apps",
-  "updatedAt": "2026-08-30T13:00:00Z",
+  "updatedAt": "2026-08-31T10:00:00Z",
   "apps": [
     {
       "id": "cursor-canvas",
       "name": "Cursor Canvas",
       "title": "看板 (Cursor Canvas)",
-      "version": "0.1.0",
-      "description": "极简可视化产物看板，支持指标卡片、数据表格、柱状/折线/面积/环形图表、拓扑架构图、代码 Diff、待办清单及历史回放与导出",
+      "version": "0.1.1",
+      "description": "极简可视化产物看板，数据按项目隔离；支持指标卡片、数据表格、柱状/折线/面积/环形图表、拓扑架构图、代码 Diff、待办清单及历史回放与导出",
       "kind": "plugin",
       "author": "CodePapr",
       "icon": "▦",
