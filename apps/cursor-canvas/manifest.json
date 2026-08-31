@@ -1,8 +1,8 @@
 {
   "spec": "papr/0.1",
   "name": "看板",
-  "version": "0.1.1",
-  "description": "极简看板：主界面展示当前项目看板，历史抽屉支持删除/清空/下载HTML，数据按项目隔离存 sqlite",
+  "version": "0.1.2",
+  "description": "极简看板：主界面展示当前项目看板，历史抽屉支持删除/清空/下载HTML；数据与插件同目录，按所属项目字段过滤",
   "kind": "plugin",
   "local": "none",
   "network": false,

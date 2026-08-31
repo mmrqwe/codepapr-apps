@@ -8,6 +8,7 @@ const { DatabaseSync } = require("node:sqlite");
 const PORT = Number(process.env.PORT) || 4617;
 const HOST = process.env.HOST || "127.0.0.1";
 const ROOT = __dirname;
+// 学习进度与插件同目录。全局安装则跟用户走，不按当前打开的项目拆库。
 const DATA_DIR = path.join(ROOT, "data");
 const ASSETS_DIR = path.join(ROOT, "assets");
 const DB_PATH = path.join(DATA_DIR, "learning.db");

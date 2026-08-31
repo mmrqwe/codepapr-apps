@@ -1,8 +1,9 @@
 /* 看板 (Cursor Canvas) · 零依赖极简原生版
    - 纯原生零依赖运行时，秒级响应，永不报 vendor 缺失
    - 推送协议：app_publish({ appId:"cursor-canvas", channel:"board", payload:{op,title,blocks} })
-   - 数据存储：papr.db (SQLite): board:history / board:clearedAt / inbox:board
-     全局安装时数据落在当前项目 .CodePapr/plugin-data/cursor-canvas/，按项目隔离
+   - 数据与插件同目录（papr.db）：board:history / board:clearedAt / inbox:board
+     隔离靠记录上的 workspaceId（打开项目的路径），不是第二份库
+     清空/保存只改当前项目切片，inbox:* 只读
    - 历史抽屉：支持 查看 / 删除 / 清空 / 导出下载独立HTML / 恢复最近一条
 */
 
@@ -227,8 +228,14 @@
       title: payload.title || payload.name || '看板',
       subtitle: payload.subtitle || payload.desc || '',
       blocks,
-      raw: payload
+      raw: payload,
+      workspaceId: payload.workspaceId || '',
+      workspaceName: payload.workspaceName || ''
     };
+  }
+
+  function projectScope() {
+    return window.__paprProjectScope || null;
   }
 
   // ---------- 调色板与主题 ----------
@@ -860,6 +867,7 @@
       this.recovering = false;
       this.selectedNodeId = null;
       this.projectName = '';
+      this.workspaceId = '';
 
       this.initEvents();
       this.initStorage();
@@ -875,14 +883,48 @@
       this.render();
     }
 
+    stampBoard(board) {
+      const ps = projectScope();
+      if (!ps || !board || !this.workspaceId) return board;
+      return ps.stampRecord(board, this.workspaceId, this.projectName);
+    }
+
+    eventIsForThisProject(evt) {
+      const ps = projectScope();
+      if (!ps) return true;
+      const evId = ps.eventWorkspaceId(evt);
+      if (!evId) return true;
+      if (!this.workspaceId) return false;
+      return ps.eventBelongsToProject(evt, this.workspaceId);
+    }
+
     async persistHistory(nextHist) {
+      const ps = projectScope();
       try {
-        if (window.papr?.db) {
-          await window.papr.db.set('board:history', nextHist);
-        }
+        if (!window.papr?.db || !ps || !this.workspaceId) return;
+        const all = await window.papr.db.get('board:history');
+        const merged = ps.mergeProjectSlice(all, nextHist, this.workspaceId, this.projectName);
+        await window.papr.db.set('board:history', merged);
       } catch (e) {
         console.warn('[board] persist fail', e);
       }
+    }
+
+    async persistClearedAt(ts) {
+      const ps = projectScope();
+      try {
+        if (!window.papr?.db || !ps || !this.workspaceId) return;
+        const raw = await window.papr.db.get('board:clearedAt');
+        await window.papr.db.set('board:clearedAt', ps.writeClearedAt(raw, this.workspaceId, ts));
+      } catch (e) {
+        console.warn('[board] persist clearedAt fail', e);
+      }
+    }
+
+    projectClearedAt(raw) {
+      const ps = projectScope();
+      if (!ps || !this.workspaceId) return 0;
+      return ps.clearedAtForProject(raw, this.workspaceId);
     }
 
     async waitPapr(ms = 2500) {
@@ -905,50 +947,51 @@
 
         try {
           const info = await window.papr.app.info();
+          const ps = projectScope();
+          this.workspaceId = ps
+            ? ps.normalizeWorkspaceId((info && (info.workspaceId || info.workspacePath)) || '')
+            : String((info && (info.workspaceId || info.workspacePath)) || '').replace(/[/\\]+$/, '');
           this.projectName = (info && info.workspaceName) || '';
         } catch {}
 
-        let h = null, clearedAt = null, inboxBoard = null, inboxCanvas = null;
+        const ps = projectScope();
+        let h = null, clearedAtRaw = null, inboxBoard = null, inboxCanvas = null;
         try { h = await window.papr.db.get('board:history'); } catch {}
-        try { clearedAt = await window.papr.db.get('board:clearedAt'); } catch {}
+        try { clearedAtRaw = await window.papr.db.get('board:clearedAt'); } catch {}
+        const clearedAt = this.projectClearedAt(clearedAtRaw);
 
-        if (Array.isArray(h) && h.length > 0) {
-          const filtered = h.filter((x) => x && x.op !== 'clear');
-          if (filtered.length) {
-            const normed = filtered.map(normalizeBoard).filter(Boolean);
-            if (normed.length) {
-              this.history = normed;
-              this.board = normed[normed.length - 1];
-              this.render();
-              return;
-            }
-          }
-          if (h.length === 1 && h[0]?.op === 'clear') {
-            this.render();
-            return;
-          }
-        }
-
-        if (Array.isArray(h) && h.length === 0 && clearedAt) {
+        const historyAll = Array.isArray(h) ? h : [];
+        const scopedHist = (ps ? ps.filterRecords(historyAll, this.workspaceId) : [])
+          .filter((x) => x && x.op !== 'clear')
+          .map(normalizeBoard)
+          .filter(Boolean);
+        if (scopedHist.length) {
+          this.history = scopedHist;
+          this.board = scopedHist[scopedHist.length - 1];
           this.render();
           return;
         }
 
-        // 回退 inbox
+        if (clearedAt) {
+          this.render();
+          return;
+        }
+
         try { inboxBoard = await window.papr.db.get('inbox:board'); } catch {}
         try { inboxCanvas = await window.papr.db.get('inbox:canvas'); } catch {}
 
         const pick = (arr) => {
           if (!Array.isArray(arr) || !arr.length) return null;
-          const filtered = clearedAt ? arr.filter((it) => (it.ts || it.payload?.ts || 0) > clearedAt) : arr;
-          const src = filtered.length ? filtered : arr;
-          const last = src[src.length - 1];
+          const scoped = ps ? ps.filterEvents(arr, this.workspaceId) : [];
+          const filtered = clearedAt ? scoped.filter((it) => (it.ts || it.payload?.ts || 0) > clearedAt) : scoped;
+          if (!filtered.length) return null;
+          const last = filtered[filtered.length - 1];
           return last?.payload || last || null;
         };
 
         const p = pick(inboxBoard) || pick(inboxCanvas);
         if (p) {
-          const nb = normalizeBoard(p);
+          const nb = this.stampBoard(normalizeBoard(p));
           if (nb && nb.blocks.length) {
             this.board = nb;
             this.history = [nb];
@@ -967,6 +1010,7 @@
       // 监听 papr 实时推送
       if (window.papr?.events) {
         const handler = async (evt) => {
+          if (!this.eventIsForThisProject(evt)) return;
           const payload = evt?.payload;
           if (!payload) return;
           const op = (payload.op || 'replace').toLowerCase();
@@ -974,18 +1018,14 @@
             const now = Date.now();
             this.board = null;
             this.history = [];
-            try {
-              if (window.papr?.db) {
-                await window.papr.db.set('board:history', []);
-                await window.papr.db.set('board:clearedAt', now);
-              }
-            } catch {}
+            await this.persistHistory([]);
+            await this.persistClearedAt(now);
             this.pushToast('看板已清空');
             this.render();
             return;
           }
 
-          const nb = normalizeBoard(payload);
+          const nb = this.stampBoard(normalizeBoard(payload));
           if (!nb) return;
 
           if (op === 'append' && this.board) {
@@ -997,8 +1037,8 @@
               ts: Date.now(),
               op: 'append'
             };
-            this.board = merged;
-            this.history = [...this.history, merged].slice(-60);
+            this.board = this.stampBoard(merged);
+            this.history = [...this.history, this.board].slice(-60);
             this.persistHistory(this.history);
             this.pushToast(`已追加 ${nb.blocks.length} 块`);
             this.render();
@@ -1030,8 +1070,8 @@
               });
               if (patchedById) patched.blocks = [...byId.values()];
             }
-            this.board = patched;
-            this.history = [...this.history, patched].slice(-60);
+            this.board = this.stampBoard(patched);
+            this.history = [...this.history, this.board].slice(-60);
             this.persistHistory(this.history);
             this.pushToast('已更新');
             this.render();
@@ -1114,8 +1154,8 @@
               this.board = this.history.length ? this.history[this.history.length - 1] : null;
             }
             await this.persistHistory(this.history);
-            if (this.history.length === 0 && window.papr?.db) {
-              try { await window.papr.db.set('board:clearedAt', Date.now()); } catch {}
+            if (this.history.length === 0) {
+              await this.persistClearedAt(Date.now());
             }
             this.pushToast(`已删除：${targetEntry.title}`);
             this.render();
@@ -1135,14 +1175,8 @@
           const now = Date.now();
           this.board = null;
           this.history = [];
-          if (window.papr?.db) {
-            try {
-              await window.papr.db.set('board:history', []);
-              await window.papr.db.set('board:clearedAt', now);
-              await window.papr.db.delete('inbox:board');
-              await window.papr.db.delete('inbox:canvas');
-            } catch {}
-          }
+          await this.persistHistory([]);
+          await this.persistClearedAt(now);
           this.pushToast('已清空');
           this.render();
           return;
@@ -1176,7 +1210,7 @@
       // 挂载全局调试对象
       window.__board = {
         push: async (p) => {
-          const nb = normalizeBoard(p);
+          const nb = this.stampBoard(normalizeBoard(p));
           if (!nb) return;
           this.board = nb;
           this.history = [...this.history, nb].slice(-60);
@@ -1198,34 +1232,38 @@
           this.pushToast('存储未就绪');
           return;
         }
-        let h = null, inboxB = null, inboxC = null, clearedAt = null;
+        let h = null, inboxB = null, inboxC = null, clearedAtRaw = null;
         try { h = await window.papr.db.get('board:history'); } catch {}
         try { inboxB = await window.papr.db.get('inbox:board'); } catch {}
         try { inboxC = await window.papr.db.get('inbox:canvas'); } catch {}
-        try { clearedAt = await window.papr.db.get('board:clearedAt'); } catch {}
+        try { clearedAtRaw = await window.papr.db.get('board:clearedAt'); } catch {}
+        const ps = projectScope();
+        const clearedAt = this.projectClearedAt(clearedAtRaw);
 
-        if (Array.isArray(h) && h.length) {
-          const normed = h.filter((x) => x && x.op !== 'clear').map(normalizeBoard).filter(Boolean);
-          if (normed.length) {
-            this.history = normed;
-            this.board = normed[normed.length - 1];
-            await this.persistHistory(normed);
-            this.pushToast(`已恢复：${this.board.title}`);
-            return;
-          }
+        const scopedHist = (ps ? ps.filterRecords(Array.isArray(h) ? h : [], this.workspaceId) : [])
+          .filter((x) => x && x.op !== 'clear')
+          .map(normalizeBoard)
+          .filter(Boolean);
+        if (scopedHist.length) {
+          this.history = scopedHist;
+          this.board = scopedHist[scopedHist.length - 1];
+          await this.persistHistory(scopedHist);
+          this.pushToast(`已恢复：${this.board.title}`);
+          return;
         }
 
         const pick = (arr) => {
           if (!Array.isArray(arr) || !arr.length) return null;
-          const filtered = clearedAt ? arr.filter((it) => (it.ts || it.payload?.ts || 0) > clearedAt) : arr;
-          const src = filtered.length ? filtered : arr;
-          const last = src[src.length - 1];
+          const scoped = ps ? ps.filterEvents(arr, this.workspaceId) : [];
+          const filtered = clearedAt ? scoped.filter((it) => (it.ts || it.payload?.ts || 0) > clearedAt) : scoped;
+          if (!filtered.length) return null;
+          const last = filtered[filtered.length - 1];
           return last?.payload || last || null;
         };
 
         const p = pick(inboxB) || pick(inboxC);
         if (p) {
-          const nb = normalizeBoard(p);
+          const nb = this.stampBoard(normalizeBoard(p));
           if (nb) {
             this.board = nb;
             this.history = [nb];
@@ -1270,7 +1308,7 @@
             <div class="empty">
               <div class="mark">▦</div>
               <h2>暂无看板</h2>
-              <p>当前项目还没有看板。Agent 推送后只保存在本项目，不会出现在其它项目里。</p>
+              <p>当前项目还没有看板。数据与插件同目录，靠「所属项目」字段过滤，其它项目的看板不会出现在这里。</p>
               <div style="display:flex;gap:8px;justify-content:center;margin-top:14px;flex-wrap:wrap">
                 <button class="btn primary" data-action="recover" ${this.recovering ? 'disabled' : ''}>${this.recovering ? '恢复中…' : '恢复最近一条'}</button>
                 <button class="btn" data-action="open-hist">查看历史${history.length ? ` · ${history.length}` : ''}</button>
@@ -1303,7 +1341,7 @@
 
       const footerHtml = `
         <footer class="statusbar">
-          <span>本地 · ${this.projectName ? `项目 ${this.projectName} · ` : ''}数据按项目隔离</span>
+          <span>本地 · ${this.projectName ? `项目 ${this.projectName} · ` : ''}按所属项目过滤</span>
           <span class="mono">${board ? `${board.blocks.length} 块` : '0 块'} · ${history.length} 历史</span>
         </footer>
       `;

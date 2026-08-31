@@ -1,7 +1,8 @@
 /**
  * weather-hud 存储层
  * 三级回退：papr.db (sqlite) → localStorage → 内存
- * papr.db = .CodePapr/apps/<appId>/db.sqlite (宿主注入的 sqlite)
+ * papr.db 与插件同目录：全局安装 ~/.codepapr/apps/<appId>/db.sqlite，项目安装 .CodePapr/apps/<appId>/db.sqlite
+ * 天气跟用户走，不按当前打开的项目拆库、也不打所属项目字段
  * localStorage 仅为宿主时序（manifest not loaded）时的临时回退，数据会在 papr.db 就绪后自动迁回 sqlite
  */
 const LS_PREFIX = "weather-hud:";
