@@ -1,0 +1,20 @@
+{
+  "spec": "papr/0.1",
+  "name": "快捷笔记",
+  "version": "0.1.0",
+  "description": "仅本人快捷笔记：按项目分桶（有文件夹→项目，无→全局），卡片式文本/代码/链接/图片，无 Agent、无 inbox、无 app_publish",
+  "kind": "plugin",
+  "icon": "📝",
+  "local": "none",
+  "network": false,
+  "entry": "index.html",
+  "surface": {
+    "type": "overlay",
+    "width": 360,
+    "height": 560,
+    "position": "top-right"
+  },
+  "lifecycle": {
+    "show": "onDemand"
+  }
+}
