@@ -3,7 +3,7 @@
   "name": "CodePapr App & Plugin Market",
   "description": "Official App & Plugin Registry for CodePapr",
   "repository": "https://github.com/mmrqwe/codepapr-apps",
-  "updatedAt": "2026-09-04T01:20:00Z",
+  "updatedAt": "2026-09-04T01:45:00Z",
   "apps": [
     {
       "id": "cursor-canvas",
@@ -81,6 +81,33 @@
         "type": "overlay",
         "width": 400,
         "height": 520,
+        "position": "top-right"
+      },
+      "permissions": {
+        "network": false,
+        "local": "none"
+      }
+    },
+    {
+      "id": "scratch-notes",
+      "name": "Scratch Notes",
+      "title": "快捷笔记",
+      "version": "0.1.0",
+      "description": "仅本人快捷笔记：按项目分桶（有文件夹→项目，无→全局），卡片式文本/代码/链接/图片，无 Agent、无 inbox",
+      "kind": "plugin",
+      "author": "CodePapr",
+      "icon": "📝",
+      "tags": [
+        "tools",
+        "notes",
+        "productivity"
+      ],
+      "directory": "apps/scratch-notes",
+      "entry": "index.html",
+      "surface": {
+        "type": "overlay",
+        "width": 360,
+        "height": 560,
         "position": "top-right"
       },
       "permissions": {
