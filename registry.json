@@ -3,7 +3,7 @@
   "name": "CodePapr App & Plugin Market",
   "description": "Official App & Plugin Registry for CodePapr",
   "repository": "https://github.com/mmrqwe/codepapr-apps",
-  "updatedAt": "2026-09-04T01:00:00Z",
+  "updatedAt": "2026-09-04T01:20:00Z",
   "apps": [
     {
       "id": "cursor-canvas",
@@ -14,7 +14,13 @@
       "kind": "plugin",
       "author": "CodePapr",
       "icon": "▦",
-      "tags": ["tools", "canvas", "visualization", "productivity", "agent"],
+      "tags": [
+        "tools",
+        "canvas",
+        "visualization",
+        "productivity",
+        "agent"
+      ],
       "directory": "apps/cursor-canvas",
       "entry": "index.html",
       "surface": {
@@ -37,7 +43,11 @@
       "kind": "plugin",
       "author": "CodePapr",
       "icon": "⛅",
-      "tags": ["tools", "productivity", "weather"],
+      "tags": [
+        "tools",
+        "productivity",
+        "weather"
+      ],
       "directory": "apps/weather-hud",
       "entry": "index.html",
       "surface": {
@@ -52,6 +62,33 @@
       }
     },
     {
+      "id": "decision-board",
+      "name": "Decision Board",
+      "title": "决策板",
+      "version": "0.1.0",
+      "description": "Plan 模式专用决策板：推送互斥方案供用户点选，选定后按约束继续执行。Ask/Agent 勿用。",
+      "kind": "plugin",
+      "author": "CodePapr",
+      "icon": "⚖️",
+      "tags": [
+        "plan",
+        "decision",
+        "productivity"
+      ],
+      "directory": "apps/decision-board",
+      "entry": "index.html",
+      "surface": {
+        "type": "overlay",
+        "width": 400,
+        "height": 520,
+        "position": "top-right"
+      },
+      "permissions": {
+        "network": false,
+        "local": "none"
+      }
+    },
+    {
       "id": "math-mentor",
       "name": "Study Mentor",
       "title": "多学科学习导师",
@@ -60,7 +97,12 @@
       "kind": "app",
       "author": "CodePapr",
       "icon": "🎓",
-      "tags": ["education", "tutor", "learning", "agent"],
+      "tags": [
+        "education",
+        "tutor",
+        "learning",
+        "agent"
+      ],
       "directory": "apps/math-mentor",
       "entry": "index.html",
       "permissions": {
