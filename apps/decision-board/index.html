@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+  <title>决策板</title>
+  <link rel="stylesheet" href="css/theme.css" />
+</head>
+<body>
+  <div class="app" id="appRoot">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo">⚖️</div>
+        <div>
+          <div class="brand-title">决策板</div>
+          <div class="brand-sub" id="subtitle">Plan 专用</div>
+        </div>
+      </div>
+      <div class="top-actions">
+        <span class="badge" id="openBadge">0 待决</span>
+        <button class="icon-btn" id="btnClearDone" title="清空已决">⌫</button>
+      </div>
+    </header>
+
+    <div class="hint-bar" id="modeHint">
+      仅 Plan：选定后按约束继续执行 · Ask / Agent 请勿使用
+    </div>
+
+    <div class="scroll-area" id="scrollArea">
+      <div id="emptyState" class="empty">
+        <div class="empty-icon">⚖️</div>
+        <div class="empty-title">暂无待决事项</div>
+        <div class="empty-body">在 Plan 模式出现互斥方案时会推到这里。Ask / Agent 模式请勿使用。</div>
+      </div>
+
+      <section id="openSection" class="section hidden">
+        <div class="section-head">
+          <span class="section-title">待决</span>
+          <span class="section-sub" id="boardTitle"></span>
+        </div>
+        <div id="openList" class="list"></div>
+      </section>
+
+      <section id="doneSection" class="section hidden">
+        <button type="button" class="section-toggle" id="btnToggleDone">
+          <span class="section-title">已决</span>
+          <span class="section-sub" id="doneCount">0</span>
+          <span class="chev" id="doneChev">▸</span>
+        </button>
+        <div id="doneList" class="list done-list hidden"></div>
+      </section>
+    </div>
+
+    <div id="toast" class="toast hidden" role="status"></div>
+  </div>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

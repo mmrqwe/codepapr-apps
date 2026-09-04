@@ -1,0 +1,56 @@
+{
+  "spec": "papr/0.1",
+  "name": "决策板",
+  "version": "0.1.0",
+  "description": "Plan 模式专用决策板：推送互斥方案供用户点选，选定后按约束继续执行。Ask / Agent 模式不要使用（Ask 保持只读，禁止 app_publish）。",
+  "kind": "plugin",
+  "icon": "⚖️",
+  "local": "none",
+  "network": false,
+  "entry": "index.html",
+  "surface": {
+    "type": "overlay",
+    "width": 400,
+    "height": 520,
+    "position": "top-right"
+  },
+  "lifecycle": {
+    "show": "onDemand"
+  },
+  "inbox": {
+    "decisions": {
+      "description": "仅 Plan 模式使用。op=replace|append|patch|clear。items[] 含 id/question/options[{id,label,pros?,cons?,risk?}]/recommend?/status/choice?/blocking?/impact?[]。有互斥分叉才推，一次≤5条。Ask / Agent 模式禁止推送。",
+      "example": {
+        "op": "replace",
+        "title": "本次相关决策",
+        "context": "Plan: 插件默认安装范围",
+        "items": [
+          {
+            "id": "d1",
+            "question": "插件安装默认全局还是项目？",
+            "options": [
+              {
+                "id": "o1",
+                "label": "默认全局，可改项目",
+                "pros": ["一处安装到处用"],
+                "cons": ["可能污染本机环境"],
+                "risk": "medium"
+              },
+              {
+                "id": "o2",
+                "label": "默认项目",
+                "pros": ["仓库可复现"],
+                "cons": ["每个仓库装一遍"],
+                "risk": "low"
+              }
+            ],
+            "recommend": "o2",
+            "status": "open",
+            "blocking": true,
+            "impact": ["安装路径", "设置文案"]
+          }
+        ]
+      }
+    }
+  }
+}
