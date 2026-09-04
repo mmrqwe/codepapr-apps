@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+  <title>快捷笔记</title>
+  <link rel="stylesheet" href="css/theme.css" />
+</head>
+<body>
+  <div class="app" id="appRoot">
+    <header class="topbar">
+      <div class="brand">
+        <div class="mark">📝</div>
+        <div class="brand-text">
+          <div class="title">快捷笔记</div>
+          <div class="sub" id="scopeBadge">全局</div>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn icon" id="btnMenu" title="菜单" type="button">⋯</button>
+      </div>
+    </header>
+
+    <div class="toolbar">
+      <div class="search-wrap">
+        <span class="search-ico">⌕</span>
+        <input id="searchInput" class="search" type="search" placeholder="搜索标题、正文、标签…" autocomplete="off" />
+      </div>
+      <div class="chips" id="filterChips" role="tablist">
+        <button type="button" class="chip active" data-filter="all">全部</button>
+        <button type="button" class="chip" data-filter="image">仅图</button>
+        <button type="button" class="chip" data-filter="link">仅链接</button>
+        <button type="button" class="chip" data-filter="pinned">仅钉</button>
+      </div>
+    </div>
+
+    <div class="composer" id="composer">
+      <input id="noteTitle" class="composer-title" type="text" placeholder="标题（可选）" maxlength="120" autocomplete="off" />
+      <textarea id="noteBody" class="composer-body" rows="3" placeholder="记下想法… 粘贴图片 Ctrl+V"></textarea>
+      <div id="thumbStrip" class="thumb-strip hidden"></div>
+      <div class="composer-bar">
+        <div class="kind-toggles" id="kindToggles">
+          <button type="button" class="kind active" data-kind="text">文本</button>
+          <button type="button" class="kind" data-kind="code">代码</button>
+          <button type="button" class="kind" data-kind="link">链接</button>
+        </div>
+        <div class="color-dots" id="colorDots" aria-label="颜色">
+          <button type="button" class="dot gray active" data-color="gray" title="灰"></button>
+          <button type="button" class="dot amber" data-color="amber" title="琥珀"></button>
+          <button type="button" class="dot red" data-color="red" title="红"></button>
+          <button type="button" class="dot green" data-color="green" title="绿"></button>
+          <button type="button" class="dot cyan" data-color="cyan" title="青"></button>
+        </div>
+        <button type="button" class="btn primary sm" id="btnSave">存入</button>
+      </div>
+    </div>
+
+    <div class="stage" id="stage">
+      <section id="pinnedSection" class="section hidden">
+        <div class="section-head">
+          <span class="section-title">钉住</span>
+          <span class="section-sub" id="pinnedCount">0</span>
+        </div>
+        <div id="pinnedList" class="card-list"></div>
+      </section>
+
+      <section id="recentSection" class="section hidden">
+        <div class="section-head">
+          <span class="section-title">最近</span>
+          <span class="section-sub" id="recentCount">0</span>
+        </div>
+        <div id="recentList" class="card-list"></div>
+      </section>
+
+      <div id="emptyState" class="empty">
+        <div class="mark">📝</div>
+        <h2>还没有笔记</h2>
+        <p>写下文字、粘贴图片或链接，按项目自动分桶。仅本人可见，无 Agent。</p>
+      </div>
+    </div>
+
+    <div id="menuPop" class="menu-pop hidden" role="menu">
+      <button type="button" class="menu-item" id="menuExport" role="menuitem">导出 JSON</button>
+      <button type="button" class="menu-item" id="menuClearUnpinned" role="menuitem">清空未钉笔记</button>
+      <button type="button" class="menu-item muted" id="menuAbout" role="menuitem">关于</button>
+    </div>
+
+    <dialog id="editDialog">
+      <div class="dlg-head">
+        <h3>编辑笔记</h3>
+        <button type="button" class="btn icon ghost" id="btnEditClose">×</button>
+      </div>
+      <div class="dlg-body">
+        <input id="editTitle" class="composer-title" type="text" placeholder="标题（可选）" maxlength="120" />
+        <textarea id="editBody" class="composer-body" rows="6" placeholder="正文"></textarea>
+        <div class="composer-bar" style="margin-top:8px">
+          <div class="kind-toggles" id="editKindToggles">
+            <button type="button" class="kind" data-kind="text">文本</button>
+            <button type="button" class="kind" data-kind="code">代码</button>
+            <button type="button" class="kind" data-kind="link">链接</button>
+          </div>
+          <div class="color-dots" id="editColorDots">
+            <button type="button" class="dot gray" data-color="gray"></button>
+            <button type="button" class="dot amber" data-color="amber"></button>
+            <button type="button" class="dot red" data-color="red"></button>
+            <button type="button" class="dot green" data-color="green"></button>
+            <button type="button" class="dot cyan" data-color="cyan"></button>
+          </div>
+        </div>
+      </div>
+      <div class="dlg-foot">
+        <button type="button" class="btn ghost" id="btnEditCancel">取消</button>
+        <button type="button" class="btn primary" id="btnEditSave">保存</button>
+      </div>
+    </dialog>
+
+    <div id="toast" class="toast hidden" role="status"></div>
+  </div>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
