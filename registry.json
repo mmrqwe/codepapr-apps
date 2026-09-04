@@ -3,7 +3,7 @@
   "name": "CodePapr App & Plugin Market",
   "description": "Official App & Plugin Registry for CodePapr",
   "repository": "https://github.com/mmrqwe/codepapr-apps",
-  "updatedAt": "2026-08-31T15:00:00Z",
+  "updatedAt": "2026-09-04T01:00:00Z",
   "apps": [
     {
       "id": "cursor-canvas",
@@ -49,6 +49,23 @@
       "permissions": {
         "network": true,
         "local": "none"
+      }
+    },
+    {
+      "id": "math-mentor",
+      "name": "Study Mentor",
+      "title": "多学科学习导师",
+      "version": "0.1.0",
+      "description": "普林斯顿读本式多学科学习导师：导览、诊断、讲解、练习与复习闭环，覆盖大学本科专业类课程",
+      "kind": "app",
+      "author": "CodePapr",
+      "icon": "🎓",
+      "tags": ["education", "tutor", "learning", "agent"],
+      "directory": "apps/math-mentor",
+      "entry": "index.html",
+      "permissions": {
+        "network": true,
+        "local": "write"
       }
     }
   ]
